@@ -1,5 +1,5 @@
-# Unity URP Template
+# 3D Idle Tower Defense
 
-This repository is a template using the Universal Render Pipeline and the CMR design framework.
+This is an mobile-first idle tower defense game.
 
-*Generated project files in Unity 2020.3.17f1.*
+*Developed project in Unity 2020.3.17f1*
