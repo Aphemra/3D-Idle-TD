@@ -1,23 +1,25 @@
-using System;
 using System.Collections.Generic;
+using System.Linq;
 using Cinemachine;
 using Code.Components;
-using Sirenix.OdinInspector;
 using UnityEngine;
 
 namespace Code.Managers
 {
-    public class GridManager : SerializedMonoBehaviour
+    public class GridManager : CoreManager
     {
         [SerializeField] private GameObject cellPrefab;
-        [SerializeField] private Material highlightMaterial;
-        [SerializeField] private Material isOwnedMaterial;
+        [SerializeField] private Color isOwnedColor;
+        [SerializeField] private Color isUnownedColor;
+        [SerializeField] private Vector3 colorHighlightOffset;
 
         [SerializeField] private Transform gridParentContainer;
         [SerializeField] private new CinemachineVirtualCamera camera;
         
         [SerializeField] private Vector2 gridSize;
-    
+
+        [SerializeField] private List<Vector2> defaultOwnedCells;
+        
         [SerializeField] private List<CellComponent> gridCells;
 
         private void Awake()
@@ -37,6 +39,11 @@ namespace Code.Managers
 
         private void InitializeGrid()
         {
+            GenerateGrid();
+        }
+
+        private void GenerateGrid()
+        {
             for (var x = 0; x < gridSize.x; x++)
             {
                 for (var y = 0; y < gridSize.y; y++)
@@ -44,19 +51,37 @@ namespace Code.Managers
                     var cell = Instantiate(cellPrefab, new Vector3(x, y), Quaternion.identity, gridParentContainer).GetComponent<CellComponent>();
                     cell.SetGridPosition(new Vector2(x,y));
                     cell.name = "Cell (" + x + "," + y + ")";
+
+                    foreach (var defaultOwnedCell in defaultOwnedCells)
+                    {
+                        if (defaultOwnedCell.Equals(cell.GetGridPosition()))
+                        {
+                            cell.SetCellOwned(true);
+                        }
+                    }
+                    
                     gridCells.Add(cell);
                 }
             }
         }
 
-        public Material GetHighlightMaterial()
+        #region Getters and Setters
+        
+        public Color GetOwnedColor()
         {
-            return highlightMaterial;
+            return isOwnedColor;
         }
 
-        public Material GetIsOwnedMaterial()
+        public Color GetUnownedColor()
         {
-            return isOwnedMaterial;
+            return isUnownedColor;
         }
+
+        public Vector3 GetColorHighlightOffset()
+        {
+            return colorHighlightOffset;
+        }
+        
+        #endregion
     }
 }

@@ -14,21 +14,26 @@ namespace Code.Components
         [SerializeField] private double cellCost;
         [SerializeField] private Vector2 gridPosition;
 
-        private MeshRenderer meshRenderer { get; set; }
         private Material baseMaterial { get; set; }
 
         private void OnEnable()
         {
-            Game.Events.OnCellSelected += SelectCell;
-            Game.Events.OnCellSelected += DeselectCell;
+            Game.Events.OnOwnedCellSelected += SelectOwnedCell;
+            Game.Events.OnUnownedCellSelected += SelectUnownedCell;
+            
+            Game.Events.OnOwnedCellSelected += DeselectOwnedCell;
+            Game.Events.OnUnownedCellSelected += DeselectUnownedCell;
 
             Game.Events.OnCellPurchased += SetCellToOwned;
         }
 
         private void OnDisable()
         {
-            Game.Events.OnCellSelected -= SelectCell;
-            Game.Events.OnCellSelected -= DeselectCell;
+            Game.Events.OnOwnedCellSelected -= SelectOwnedCell;
+            Game.Events.OnUnownedCellSelected -= SelectUnownedCell;
+            
+            Game.Events.OnOwnedCellSelected -= DeselectOwnedCell;
+            Game.Events.OnUnownedCellSelected -= DeselectUnownedCell;
 
             Game.Events.OnCellPurchased -= SetCellToOwned;
         }
@@ -38,44 +43,75 @@ namespace Code.Components
             // Sets random value to each cell's cost for demonstration
             cellCost = Random.Range(1, 100);;
             
-            meshRenderer = GetComponentInChildren<MeshRenderer>();
-            baseMaterial = meshRenderer.material;
-            isOwned = false;
+            baseMaterial = GetComponentInChildren<MeshRenderer>().material;
+            baseMaterial.color = Game.GridManager.GetUnownedColor();
             Game.HUDManager.SetCellCostLabel(0);
         }
 
         private void Update()
         {
-            if (isOwned)
-                meshRenderer.material = Game.GridManager.GetIsOwnedMaterial();
+            if (isOwned && Game.SelectedCell != this)
+                baseMaterial.color = Game.GridManager.GetOwnedColor();
         }
 
         private void OnMouseDown()
         {
-            if (isOwned) return;
-            
-            Game.Events.OnCellSelected.Invoke(this);
+            if (isOwned)
+                Game.Events.OnOwnedCellSelected.Invoke(this);
+            else if (!isOwned)
+                Game.Events.OnUnownedCellSelected.Invoke(this);
         }
 
-        private void SelectCell(CellComponent selectedCell)
+        private void SelectUnownedCell(CellComponent selectedCell)
         {
             if (selectedCell != this || selectedCell.isOwned) return;
             
             Game.SelectedCell = this;
-            meshRenderer.material = Game.GridManager.GetHighlightMaterial();
+            baseMaterial.color = GetHighLightColor(baseMaterial.color);
             Game.HUDManager.SetCellCostLabel(cellCost);
         }
 
-        private void DeselectCell(CellComponent selectedCell)
+        private void DeselectUnownedCell(CellComponent selectedCell)
         {
-            if (selectedCell == this) return;
+            if (selectedCell == this || selectedCell.isOwned) return;
+            
+            baseMaterial.color = Game.GridManager.GetUnownedColor();
+        }
 
-            meshRenderer.material = baseMaterial;
+        private void SelectOwnedCell(CellComponent selectedCell)
+        {
+            if (selectedCell != this || !selectedCell.isOwned) return;
+            
+            Game.SelectedCell = this;
+            baseMaterial.color = GetHighLightColor(baseMaterial.color);
+            //Game.HUDManager.SetCellCostLabel(cellCost); -- SetTowerCostLabel eventually
+        }
+        
+        private void DeselectOwnedCell(CellComponent selectedCell)
+        {
+            if (selectedCell == this || !selectedCell.isOwned) return;
+            
+            baseMaterial.color = Game.GridManager.GetUnownedColor();
         }
 
         public void SetGridPosition(Vector2 gridPosition)
         {
             this.gridPosition = gridPosition;
+        }
+
+        public Vector2 GetGridPosition()
+        {
+            return gridPosition;
+        }
+
+        public void SetCellOwned(bool owned)
+        {
+            isOwned = owned;
+        }
+        
+        public bool GetCellOwned()
+        {
+            return isOwned;
         }
 
         private void SetCellToOwned(CellComponent cellToOwn)
@@ -89,7 +125,14 @@ namespace Code.Components
             Game.Cash -= cellToOwn.cellCost;
             Game.HUDManager.SetCashLabelValue(cellToOwn);
             cellToOwn.isOwned = true;
-            cellToOwn.meshRenderer.material = Game.GridManager.GetIsOwnedMaterial();
+            cellToOwn.baseMaterial.color = Game.GridManager.GetOwnedColor();
+        }
+
+        private Color GetHighLightColor(Color colorToHighlight)
+        {
+            return new Color(colorToHighlight.r + Game.GridManager.GetColorHighlightOffset().x, 
+                            colorToHighlight.g + Game.GridManager.GetColorHighlightOffset().y, 
+                            colorToHighlight.b + Game.GridManager.GetColorHighlightOffset().z);
         }
     }
 }
