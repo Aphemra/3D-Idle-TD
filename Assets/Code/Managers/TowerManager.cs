@@ -1,14 +1,17 @@
 ﻿using System;
+using System.Collections.Generic;
 using Code.Components;
+using Code.Resources;
 using UnityEngine;
 
 namespace Code.Managers
 {
     public class TowerManager : CoreManager
     {
-        [SerializeField] private GameObject testTowerPrefab;
+        [SerializeField] private List<TowerResource> towerResources;
+        [SerializeField] private int defaultGroupTowerTier = 0;
         [SerializeField] private Transform towerParentTransform;
-        
+
         private void OnEnable()
         {
             Game.Events.OnTowerPurchased += PlaceTower;
@@ -25,12 +28,18 @@ namespace Code.Managers
                 Game.TowerManager = this;
         }
 
+        private void InitializeTower(TowerComponent tower, TowerResource towerResource)
+        {
+            tower.InitializeTowerStatistics(towerResource);
+        }
+
         private void PlaceTower(CellComponent cellToPlaceTower)
         {
-            Instantiate(testTowerPrefab,
-                new Vector3(cellToPlaceTower.GetGridPosition().x, cellToPlaceTower.GetGridPosition().y), 
-                Quaternion.identity, 
-                towerParentTransform);
+            TowerResource towerResource = towerResources[defaultGroupTowerTier];
+            TowerComponent tower = Instantiate(towerResource.prefab, new Vector3(cellToPlaceTower.GetGridPosition().x, cellToPlaceTower.GetGridPosition().y), Quaternion.identity, towerParentTransform).GetComponent<TowerComponent>();
+            tower.gameObject.name = "Tower at (" + cellToPlaceTower.GetGridPosition().x + "," + cellToPlaceTower.GetGridPosition().y + ")";
+            
+            InitializeTower(tower, towerResource);
         }
     }
 }

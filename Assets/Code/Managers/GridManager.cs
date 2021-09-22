@@ -21,6 +21,9 @@ namespace Code.Managers
         [SerializeField] private List<Vector2> defaultOwnedCells;
         
         [SerializeField] private List<CellComponent> gridCells;
+        
+        [SerializeField] private GameObject shotRangeArea;
+        [SerializeField] private GameObject floorPlane;
 
         private void Awake()
         {
@@ -40,6 +43,8 @@ namespace Code.Managers
         private void InitializeGrid()
         {
             GenerateGrid();
+            GenerateShotArea();
+            GenerateBattleField();
         }
 
         private void GenerateGrid()
@@ -63,6 +68,17 @@ namespace Code.Managers
                     gridCells.Add(cell);
                 }
             }
+        }
+
+        private void GenerateShotArea()
+        {
+            shotRangeArea.transform.position = new Vector3(gridSize.x / 2, gridSize.y / 2, -1);
+            shotRangeArea.transform.localScale = new Vector3(gridSize.x * 1.5f, gridSize.y * 1.5f, shotRangeArea.transform.localScale.z);
+        }
+
+        private void GenerateBattleField()
+        {
+            floorPlane.transform.localScale = new Vector3(gridSize.x * 2f, 1f, gridSize.y * 2f);
         }
 
         #region Getters and Setters

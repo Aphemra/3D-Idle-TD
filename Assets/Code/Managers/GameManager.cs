@@ -9,6 +9,8 @@ namespace Code.Managers
         [SerializeField] private double startingCash;
         [SerializeField] private bool inBuyTowerMode;
         [SerializeField] private bool inBuyCellMode;
+        [SerializeField] private float scrollScale;
+        [SerializeField] private Vector2 minMaxFOVZoom;
         
         [SerializeField] private CinemachineVirtualCamera topDownCamera;
         [SerializeField] private CinemachineVirtualCamera threeDimensionalCamera;
@@ -26,14 +28,18 @@ namespace Code.Managers
             Game.HUDManager.SetCashLabelValue(Game.SelectedCell);
         }
 
+        private void Update()
+        {
+            if (Input.mouseScrollDelta.y != 0)
+                topDownCamera.m_Lens.FieldOfView = Mathf.Clamp(topDownCamera.m_Lens.FieldOfView - (Input.mouseScrollDelta.y * scrollScale), minMaxFOVZoom.x, minMaxFOVZoom.y);
+        }
+
         public void SwitchCameras()
         {
             if (topDownCamera.Priority > threeDimensionalCamera.Priority)
                 threeDimensionalCamera.Priority += 10;
             else if (topDownCamera.Priority < threeDimensionalCamera.Priority)
                 threeDimensionalCamera.Priority -= 10;
-
-
         }
 
         #region Getters and Setters

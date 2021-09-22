@@ -1,5 +1,6 @@
 using Code.Components;
 using Code.Managers;
+using UnityEngine;
 using UnityEngine.Events;
 
 namespace Code
@@ -12,6 +13,8 @@ namespace Code
         public UnityAction<CellComponent> OnCellPurchased;
 
         public UnityAction<CellComponent> OnTowerPurchased;
+
+        public UnityAction<GameObject> OnEnemyEnteringBattlefield; // Probably switch to EnemyComponent and Transform, maybe
     }
 
     public static class Game
