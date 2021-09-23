@@ -9,6 +9,7 @@ namespace Code.Managers
         [SerializeField] private double startingCash;
         [SerializeField] private bool inBuyTowerMode;
         [SerializeField] private bool inBuyCellMode;
+        [SerializeField] private bool inTowerTierUpgradeMode;
         [SerializeField] private float scrollScale;
         [SerializeField] private Vector2 minMaxFOVZoom;
         
@@ -18,6 +19,7 @@ namespace Code.Managers
         private void Awake()
         {
             Game.Cash = startingCash;
+            ChangeState(GameState.GridGeneration);
             
             if (Game.GameManager == null)
                 Game.GameManager = this;
@@ -54,6 +56,11 @@ namespace Code.Managers
             return inBuyCellMode;
         }
         
+        public bool GetTowerTierUpgradeMode()
+        {
+            return inTowerTierUpgradeMode;
+        }
+        
         public void SetBuyTowerMode(bool modeState)
         {
             inBuyTowerMode = modeState;
@@ -64,6 +71,16 @@ namespace Code.Managers
             inBuyCellMode = modeState;
         }
         
+        public void SetTowerTierUpgradeMode(bool modeState)
+        {
+            inTowerTierUpgradeMode = modeState;
+        }
+
         #endregion
+
+        public void ChangeState(GameState gameState)
+        {
+            Game.GameState = gameState;
+        }
     }
 }

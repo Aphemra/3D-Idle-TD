@@ -97,6 +97,11 @@ namespace Code.Managers
         {
             return colorHighlightOffset;
         }
+
+        public Vector2 GetGridSize()
+        {
+            return gridSize;
+        }
         
         #endregion
     }

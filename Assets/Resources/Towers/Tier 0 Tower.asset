@@ -27,5 +27,5 @@ MonoBehaviour:
   maxHealth: 5
   baseDamage: 3
   baseArmor: 7
-  shotSpeed: 5
+  shotSpeed: 0.5
   baseArmorPenetration: 1

@@ -4,6 +4,7 @@ using Sirenix.OdinInspector;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using Random = UnityEngine.Random;
 
 namespace Code.Managers
 {
@@ -24,6 +25,11 @@ namespace Code.Managers
         [SerializeField] private GameObject buyTowersCanvas;
         [SerializeField] private TextMeshProUGUI towerCostLabel;
         [SerializeField] private Button buyTowerButton;
+        [Space]
+        
+        [Title("Tower Tier Upgrade Menu Variables")]
+        [SerializeField] private GameObject towerTierUpgradeCanvas;
+        [SerializeField] private Button towerTierUpgradeButton;
 
         /*
          *  1. Start on Buy Towers screen
@@ -54,6 +60,11 @@ namespace Code.Managers
         {
             buyCellButton.interactable = false;
             buyTowerButton.interactable = true;
+        }
+
+        public void SetTowerTierUpgradeButtonInteractable(bool state)
+        {
+            towerTierUpgradeButton.interactable = state;
         }
 
         public void SetCashLabelValue(CellComponent selectedCell)
@@ -110,13 +121,37 @@ namespace Code.Managers
             Game.Events.OnTowerPurchased.Invoke(Game.SelectedCell);
         }
 
-        public void SwitchModes()
+        public void SwitchModes(int newMode)
         {
-            Game.GameManager.SetBuyCellMode(!Game.GameManager.GetBuyCellMode());
-            Game.GameManager.SetBuyTowerMode(!Game.GameManager.GetBuyTowerMode());
+            switch (newMode)
+            {
+                case 0:
+                    Game.GameManager.SetBuyCellMode(true);
+                    Game.GameManager.SetBuyTowerMode(false);
+                    Game.GameManager.SetTowerTierUpgradeMode(false);
+                    buyCellsCanvas.SetActive(true);
+                    buyTowersCanvas.SetActive(false);
+                    towerTierUpgradeCanvas.SetActive(false);
+                    break;
+                case 1:
+                    Game.GameManager.SetBuyCellMode(false);
+                    Game.GameManager.SetBuyTowerMode(true);
+                    Game.GameManager.SetTowerTierUpgradeMode(false);
+                    buyCellsCanvas.SetActive(false);
+                    buyTowersCanvas.SetActive(true);
+                    towerTierUpgradeCanvas.SetActive(false);
+                    break;
+                case 2:
+                    Game.GameManager.SetBuyCellMode(false);
+                    Game.GameManager.SetBuyTowerMode(false);
+                    Game.GameManager.SetTowerTierUpgradeMode(true);
+                    buyCellsCanvas.SetActive(false);
+                    buyTowersCanvas.SetActive(false);
+                    towerTierUpgradeCanvas.SetActive(true);
+                    break;
+            }
             
-            buyCellsCanvas.SetActive(!buyCellsCanvas.activeSelf);
-            buyTowersCanvas.SetActive(!buyTowersCanvas.activeSelf);
+            Game.SelectedCell = null;
         }
     }
 }

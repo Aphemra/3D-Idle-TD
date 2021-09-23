@@ -1,6 +1,7 @@
 using System;
 using Code.Managers;
 using TMPro;
+using UnityEditor.EditorTools;
 using UnityEditor.UIElements;
 using UnityEngine;
 using Random = UnityEngine.Random;
@@ -13,6 +14,7 @@ namespace Code.Components
 
         [SerializeField] private double cellCost;
         [SerializeField] private Vector2 gridPosition;
+        [SerializeField] private TowerComponent towerInCell;
 
         private Material baseMaterial { get; set; }
 
@@ -56,10 +58,43 @@ namespace Code.Components
 
         private void OnMouseDown()
         {
+            if (Game.SelectedCell == this) return;
+
+            if (towerInCell != null && Game.GameManager.GetTowerTierUpgradeMode() && IsSelected(this))
+            {
+                DeselectOwnedCell(this);
+                Game.HUDManager.SetTowerTierUpgradeButtonInteractable(false);
+                return;
+            }
+
+            if (towerInCell != null && Game.GameManager.GetTowerTierUpgradeMode() && !IsSelected(this) && Game.TowerManager.GetSelectedTowers().Count + 1 < 4)
+            {
+                SelectOwnedCell(this);
+                
+                if (Game.TowerManager.GetSelectedTowers().Count == 4)
+                    Game.HUDManager.SetTowerTierUpgradeButtonInteractable(true);
+                else
+                    Game.HUDManager.SetTowerTierUpgradeButtonInteractable(false);
+
+                return;
+
+            }
+            
             if (isOwned)
                 Game.Events.OnOwnedCellSelected.Invoke(this);
             else if (!isOwned)
                 Game.Events.OnUnownedCellSelected.Invoke(this);
+        }
+
+        private bool IsSelected(CellComponent cellToCheck)
+        {
+            if (Game.TowerManager.GetSelectedTowers().Count == 0) return false;
+            
+            foreach (var selectedTower in Game.TowerManager.GetSelectedTowers())
+            {
+                if (selectedTower == cellToCheck.GetTowerInCell()) return true;
+            }
+            return false;
         }
 
         private void SelectUnownedCell(CellComponent selectedCell)
@@ -81,17 +116,19 @@ namespace Code.Components
         private void SelectOwnedCell(CellComponent selectedCell)
         {
             if (selectedCell != this || !selectedCell.isOwned) return;
-            
+
             Game.SelectedCell = this;
             baseMaterial.color = GetHighLightColor(baseMaterial.color);
+            Game.TowerManager.AddToSelectedTowers(Game.SelectedCell.GetTowerInCell());
             //Game.HUDManager.SetCellCostLabel(cellCost); -- SetTowerCostLabel eventually
         }
         
         private void DeselectOwnedCell(CellComponent selectedCell)
         {
-            if (selectedCell == this || !selectedCell.isOwned) return;
-            
+            if (selectedCell == this || !selectedCell.isOwned || Game.SelectedCell == null) return;
+
             baseMaterial.color = Game.GridManager.GetUnownedColor();
+            Game.TowerManager.RemoveFromSelectedTowers(Game.SelectedCell.GetTowerInCell());
         }
 
         public void SetGridPosition(Vector2 gridPosition)
@@ -114,13 +151,23 @@ namespace Code.Components
             return isOwned;
         }
 
+        public void SetTowerInCell(TowerComponent tower)
+        {
+            towerInCell = tower;
+        }
+
+        public TowerComponent GetTowerInCell()
+        {
+            return towerInCell;
+        }
+
         private void SetCellToOwned(CellComponent cellToOwn)
         {
             // Subtract cell cost from total money cost (should be a GameManager method call)
             // Set cell isOwned bool to true
             // Set cell material to isOwned material
 
-            if (cellToOwn.isOwned) return;
+            if (cellToOwn == null || cellToOwn.isOwned) return;
             
             Game.Cash -= cellToOwn.cellCost;
             Game.HUDManager.SetCashLabelValue(cellToOwn);
