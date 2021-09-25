@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Code.Components;
 using Code.Resources;
 using UnityEngine;
@@ -51,6 +52,8 @@ namespace Code.Managers
 
         private void PlaceTower(CellComponent cellToPlaceTower)
         {
+            if (cellToPlaceTower.GetTowerInCell() != null) return;
+            
             var towerResource = towerResources[defaultGroupTowerTier];
             var tower = Instantiate(towerResource.prefab, new Vector3(cellToPlaceTower.GetGridPosition().x, cellToPlaceTower.GetGridPosition().y), Quaternion.identity, towerParentTransform).GetComponent<TowerComponent>();
             tower.gameObject.name = "Tower at (" + cellToPlaceTower.GetGridPosition().x + "," + cellToPlaceTower.GetGridPosition().y + ")";
@@ -59,21 +62,13 @@ namespace Code.Managers
             tower.SetTowerGridPosition(cellToPlaceTower.GetGridPosition());
 
             InitializeTower(tower, towerResource);
-        }
 
-        public bool CanTowersTierUp(List<TowerComponent> towers)
-        {
-            foreach (var tower in towers)
-            {
-                if (!tower.IsNeighborsWith(towers))return false;
-            }
-            return true;
+            Game.GameManager.SubtractValueFromGameCash(tower.GetOccupiedCell().GetCellCost()); // Debug
+            Game.Events.OnInfoUpdated.Invoke(); // Maybe Debug
         }
         
-        public void CanTowersTierUpTemp()
+        public void CanTowersTierUp()
         {
-            selectedTowers = spawnedTowers;
-
             var truthCount = 0;
             
             if (selectedTowers.Count != 4) return;
@@ -83,8 +78,17 @@ namespace Code.Managers
                 if (CheckTowerNeighbors(tower)) truthCount++;
             }
 
-            if (truthCount == 4) print("TOWERS CAN TIER UP!");
-            if (truthCount < 4) print("TOWERS AREN'T NEIGHBORS!");
+            if (truthCount == 4)
+            {
+                print("TOWERS CAN TIER UP!");
+                Game.HUDManager.SetNotificationLabel("Selected towers can tier up!");
+            }
+
+            if (truthCount < 4)
+            {
+                print("TOWERS AREN'T NEIGHBORS!");
+                Game.HUDManager.SetNotificationLabel("Selected towers need to be in a 2x2 grid!");
+            }
         }
         
         private bool CheckTowerNeighbors(TowerComponent towerToCheck)
@@ -126,6 +130,10 @@ namespace Code.Managers
 
         public void AddToSelectedTowers(TowerComponent towerToSelect)
         {
+            selectedTowers ??= new List<TowerComponent>();
+            
+            if (selectedTowers.Any(tower => tower == towerToSelect)) return;
+            
             selectedTowers.Add(towerToSelect);
         }
 

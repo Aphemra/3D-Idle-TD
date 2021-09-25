@@ -30,14 +30,17 @@ namespace Code
         public UnityAction OnWaveWon;           // Event fires when a wave is completed
         public UnityAction OnWaveLost;          // Event fires when a wave is lost
         public UnityAction OnLocationWon;       // Event fires when a location is completed
-        public UnityAction OnBossWaveEntered;   // Event fires when a boss wave is started.
+        public UnityAction OnBossWaveEntered;   // Event fires when a boss wave is started
         public UnityAction OnBossDestroyed;     // Event fires when a boss wave is completed
         
+        public UnityAction OnModeSwitched;      // Event fires when the boy mode is switched
+        
+        public UnityAction OnInfoUpdated;       // Event fires when any piece of information is updated
+        public UnityAction OnCashValueUpdated;  // Event fires when cash value is updated
+        
         // TODO: Work on switching over to a game state system and pure event driven game loop
-
-
-        public UnityAction<CellComponent> OnUnownedCellSelected;
-        public UnityAction<CellComponent> OnOwnedCellSelected;
+        
+        public UnityAction OnCellSelected;
 
         public UnityAction<CellComponent> OnCellPurchased;
 
@@ -59,6 +62,7 @@ namespace Code
         public static HUDManager HUDManager { get; set; }
         public static GameManager GameManager { get; set; }
         public static TowerManager TowerManager { get; set; }
+        public static ControlsManager ControlsManager { get; set; }
 
         public static readonly GameEvents Events = new GameEvents();
     }

@@ -45,6 +45,7 @@ namespace Code.Managers
             GenerateGrid();
             GenerateShotArea();
             GenerateBattleField();
+            Game.GameManager.ChangeState(GameState.TowerBuyingMode);
         }
 
         private void GenerateGrid()
@@ -56,6 +57,8 @@ namespace Code.Managers
                     var cell = Instantiate(cellPrefab, new Vector3(x, y), Quaternion.identity, gridParentContainer).GetComponent<CellComponent>();
                     cell.SetGridPosition(new Vector2(x,y));
                     cell.name = "Cell (" + x + "," + y + ")";
+                    
+                    cell.SetCellCost(Random.Range(1, 100)); // Debug
 
                     foreach (var defaultOwnedCell in defaultOwnedCells)
                     {
@@ -64,7 +67,7 @@ namespace Code.Managers
                             cell.SetCellOwned(true);
                         }
                     }
-                    
+                    cell.SetSpawnColor();
                     gridCells.Add(cell);
                 }
             }

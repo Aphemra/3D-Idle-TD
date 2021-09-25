@@ -13,6 +13,7 @@ namespace Code.Managers
         [Title("General Menu Variables")]
         [SerializeField] private TextMeshProUGUI totalCashLabel;
         [SerializeField] private Button changeModeButton;
+        [SerializeField] private TextMeshProUGUI notificationLabel;
         [Space]
         
         [Title("Buy Cells Menu Variables")]
@@ -40,43 +41,48 @@ namespace Code.Managers
 
         private void OnEnable()
         {
-            Game.Events.OnUnownedCellSelected += SetBuyCellButtonActive;
-            Game.Events.OnOwnedCellSelected += SetBuyTowerButtonActive;
+            Game.Events.OnInfoUpdated += UpdateAllHUDElements;
+            Game.Events.OnCashValueUpdated += SetCashLabelValue;
         }
 
         private void OnDisable()
         {
-            Game.Events.OnUnownedCellSelected -= SetBuyCellButtonActive;
-            Game.Events.OnOwnedCellSelected -= SetBuyTowerButtonActive;
+            Game.Events.OnInfoUpdated -= UpdateAllHUDElements;
+            Game.Events.OnCashValueUpdated -= SetCashLabelValue;
         }
 
-        private void SetBuyCellButtonActive(CellComponent selectedCell)
+        private void UpdateAllHUDElements()
         {
-            buyTowerButton.interactable = false;
-            buyCellButton.interactable = true;
+            // Any HUD update methods get called here.
+            SetCashLabelValue();
+
+            if (Game.SelectedCell == null) return;
+
+            if (!Game.SelectedCell.GetCellOwned())
+                SetCellCostLabel(Game.SelectedCell.GetCellCost());
+            else
+                SetCellCostLabel(0);
+            
+            if (Game.SelectedCell.GetCellOwned() && Game.SelectedCell.GetTowerInCell() == null)
+                SetTowerCostLabel(Game.SelectedCell.GetCellCost());
+            else
+                SetTowerCostLabel(0);
         }
         
-        private void SetBuyTowerButtonActive(CellComponent selectedCell)
-        {
-            buyCellButton.interactable = false;
-            buyTowerButton.interactable = true;
-        }
+        #region Already Refactored
 
-        public void SetTowerTierUpgradeButtonInteractable(bool state)
+        public void SetCashLabelValue()
         {
-            towerTierUpgradeButton.interactable = state;
+            totalCashLabel.text = FormatValueToString(Game.Cash);
         }
-
-        public void SetCashLabelValue(CellComponent selectedCell)
+        
+        private string FormatValueToString(double currencyToFormat)
         {
-            if (selectedCell == null)
-            {
-                totalCashLabel.text = FormatTotalCashToString(Game.Cash);
-                return;
-            }
-            
-            totalCashLabel.text = FormatTotalCashToString(Game.Cash);
+            // Work this out later
+            return "$" + currencyToFormat;
         }
+        
+        #endregion
 
         private void Awake()
         {
@@ -87,19 +93,11 @@ namespace Code.Managers
         private void Start()
         {
             cellCostLabel.text = "";
+            towerCostLabel.text = "";
             buyCellButton.interactable = false;
-        }
-
-        private string FormatCostToString(double currencyToFormat)
-        {
-            return "$" + currencyToFormat;
+            buyTowerButton.interactable = false;
         }
         
-        private string FormatTotalCashToString(double currencyToFormat)
-        {
-            return "Total Cash: $" + currencyToFormat;
-        }
-
         public void SetCellCostLabel(double currencyToFormat)
         {
             if (currencyToFormat == 0)
@@ -108,7 +106,23 @@ namespace Code.Managers
                 return;
             }
             
-            cellCostLabel.text = "Cell Cost: " + FormatCostToString(currencyToFormat);
+            cellCostLabel.text = "Cell Cost: " + FormatValueToString(currencyToFormat);
+        }
+        
+        public void SetTowerCostLabel(double currencyToFormat)
+        {
+            if (currencyToFormat == 0)
+            {
+                towerCostLabel.text = "";
+                return;
+            }
+            
+            towerCostLabel.text = "Tower Cost: " + FormatValueToString(currencyToFormat);
+        }
+
+        public void SetNotificationLabel(string text)
+        {
+            notificationLabel.text = text;
         }
 
         public void PurchaseCell()
@@ -132,6 +146,9 @@ namespace Code.Managers
                     buyCellsCanvas.SetActive(true);
                     buyTowersCanvas.SetActive(false);
                     towerTierUpgradeCanvas.SetActive(false);
+                    notificationLabel.text = "";
+                    Game.GameManager.ChangeState(GameState.CellBuyingMode);
+                    Game.Events.OnModeSwitched.Invoke();
                     break;
                 case 1:
                     Game.GameManager.SetBuyCellMode(false);
@@ -140,6 +157,9 @@ namespace Code.Managers
                     buyCellsCanvas.SetActive(false);
                     buyTowersCanvas.SetActive(true);
                     towerTierUpgradeCanvas.SetActive(false);
+                    notificationLabel.text = "";
+                    Game.GameManager.ChangeState(GameState.TowerBuyingMode);
+                    Game.Events.OnModeSwitched.Invoke();
                     break;
                 case 2:
                     Game.GameManager.SetBuyCellMode(false);
@@ -148,6 +168,9 @@ namespace Code.Managers
                     buyCellsCanvas.SetActive(false);
                     buyTowersCanvas.SetActive(false);
                     towerTierUpgradeCanvas.SetActive(true);
+                    notificationLabel.text = "";
+                    Game.GameManager.ChangeState(GameState.TowerTierMode);
+                    Game.Events.OnModeSwitched.Invoke();
                     break;
             }
             

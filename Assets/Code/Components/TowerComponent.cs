@@ -7,6 +7,7 @@ using Sirenix.OdinInspector;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Analytics;
+using Random = UnityEngine.Random;
 
 namespace Code.Components
 {
@@ -48,7 +49,7 @@ namespace Code.Components
         private void SetNeighbors(TowerComponent newTower)
         {
             newTower.InitializeNeighbors();
-            
+
             foreach (var activeTower in Game.TowerManager.GetActiveTowers())
             {
                 for (var i = 0; i < Game.TowerManager.GetDirections().Count; i++)
@@ -98,6 +99,8 @@ namespace Code.Components
         private void Start()
         {
             InitializeNeighbors();
+            
+            SetTowerCost(Random.Range(25, 100)); // Debug
         }
 
         private void InitializeNeighbors()
@@ -176,6 +179,11 @@ namespace Code.Components
             return gridLocation;
         }
 
+        public CellComponent GetOccupiedCell()
+        {
+            return occupiedCell;
+        }
+
         public bool IsNeighborsWith(List<TowerComponent> towersToCheck)
         {
             foreach (var neighbor in neighbors.GetNeighborsInAllDirections())
@@ -192,6 +200,16 @@ namespace Code.Components
         public Neighbors GetNeighbors()
         {
             return neighbors;
+        }
+
+        public double GetTowerCost()
+        {
+            return cost;
+        }
+
+        public void SetTowerCost(double towerCost)
+        {
+            cost = towerCost;
         }
     }
 }

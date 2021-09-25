@@ -1,139 +1,161 @@
 using System;
-using Code.Managers;
-using TMPro;
-using UnityEditor.EditorTools;
-using UnityEditor.UIElements;
+using System.Linq;
 using UnityEngine;
-using Random = UnityEngine.Random;
 
 namespace Code.Components
 {
     public class CellComponent : MonoBehaviour
     {
         [SerializeField] private bool isOwned;
+        [SerializeField] private bool isMultiSelected = false;
 
         [SerializeField] private double cellCost;
         [SerializeField] private Vector2 gridPosition;
         [SerializeField] private TowerComponent towerInCell;
 
-        private Material baseMaterial { get; set; }
+        [SerializeField] private MeshRenderer meshRenderer;
 
         private void OnEnable()
         {
-            Game.Events.OnOwnedCellSelected += SelectOwnedCell;
-            Game.Events.OnUnownedCellSelected += SelectUnownedCell;
-            
-            Game.Events.OnOwnedCellSelected += DeselectOwnedCell;
-            Game.Events.OnUnownedCellSelected += DeselectUnownedCell;
-
-            Game.Events.OnCellPurchased += SetCellToOwned;
+            Game.Events.OnCellPurchased += BuyCell;
+            Game.Events.OnCellPurchased += DeselectCell;
+            Game.Events.OnModeSwitched += ResetCellsOnModeSwitch;
         }
 
         private void OnDisable()
         {
-            Game.Events.OnOwnedCellSelected -= SelectOwnedCell;
-            Game.Events.OnUnownedCellSelected -= SelectUnownedCell;
-            
-            Game.Events.OnOwnedCellSelected -= DeselectOwnedCell;
-            Game.Events.OnUnownedCellSelected -= DeselectUnownedCell;
-
-            Game.Events.OnCellPurchased -= SetCellToOwned;
+            Game.Events.OnCellPurchased -= BuyCell;
+            Game.Events.OnCellPurchased -= DeselectCell;
+            Game.Events.OnModeSwitched -= ResetCellsOnModeSwitch;
         }
 
-        private void Start()
+        public void SetSpawnColor()
         {
-            // Sets random value to each cell's cost for demonstration
-            cellCost = Random.Range(1, 100);;
-            
-            baseMaterial = GetComponentInChildren<MeshRenderer>().material;
-            baseMaterial.color = Game.GridManager.GetUnownedColor();
-            Game.HUDManager.SetCellCostLabel(0);
-        }
-
-        private void Update()
-        {
-            if (isOwned && Game.SelectedCell != this)
-                baseMaterial.color = Game.GridManager.GetOwnedColor();
-        }
-
-        private void OnMouseDown()
-        {
-            if (Game.SelectedCell == this) return;
-
-            if (towerInCell != null && Game.GameManager.GetTowerTierUpgradeMode() && IsSelected(this))
-            {
-                DeselectOwnedCell(this);
-                Game.HUDManager.SetTowerTierUpgradeButtonInteractable(false);
-                return;
-            }
-
-            if (towerInCell != null && Game.GameManager.GetTowerTierUpgradeMode() && !IsSelected(this) && Game.TowerManager.GetSelectedTowers().Count + 1 < 4)
-            {
-                SelectOwnedCell(this);
-                
-                if (Game.TowerManager.GetSelectedTowers().Count == 4)
-                    Game.HUDManager.SetTowerTierUpgradeButtonInteractable(true);
-                else
-                    Game.HUDManager.SetTowerTierUpgradeButtonInteractable(false);
-
-                return;
-
-            }
-            
-            if (isOwned)
-                Game.Events.OnOwnedCellSelected.Invoke(this);
-            else if (!isOwned)
-                Game.Events.OnUnownedCellSelected.Invoke(this);
-        }
-
-        private bool IsSelected(CellComponent cellToCheck)
-        {
-            if (Game.TowerManager.GetSelectedTowers().Count == 0) return false;
-            
-            foreach (var selectedTower in Game.TowerManager.GetSelectedTowers())
-            {
-                if (selectedTower == cellToCheck.GetTowerInCell()) return true;
-            }
-            return false;
-        }
-
-        private void SelectUnownedCell(CellComponent selectedCell)
-        {
-            if (selectedCell != this || selectedCell.isOwned) return;
-            
-            Game.SelectedCell = this;
-            baseMaterial.color = GetHighLightColor(baseMaterial.color);
-            Game.HUDManager.SetCellCostLabel(cellCost);
-        }
-
-        private void DeselectUnownedCell(CellComponent selectedCell)
-        {
-            if (selectedCell == this || selectedCell.isOwned) return;
-            
-            baseMaterial.color = Game.GridManager.GetUnownedColor();
-        }
-
-        private void SelectOwnedCell(CellComponent selectedCell)
-        {
-            if (selectedCell != this || !selectedCell.isOwned) return;
-
-            Game.SelectedCell = this;
-            baseMaterial.color = GetHighLightColor(baseMaterial.color);
-            Game.TowerManager.AddToSelectedTowers(Game.SelectedCell.GetTowerInCell());
-            //Game.HUDManager.SetCellCostLabel(cellCost); -- SetTowerCostLabel eventually
+            meshRenderer.material.color = isOwned ? Game.GridManager.GetOwnedColor() : Game.GridManager.GetUnownedColor();
         }
         
-        private void DeselectOwnedCell(CellComponent selectedCell)
+        private void OnMouseDown()
         {
-            if (selectedCell == this || !selectedCell.isOwned || Game.SelectedCell == null) return;
+            if (Game.GameState == GameState.TowerTierMode)
+                MultiCellSelection();
+            else
+                SingleCellSelection();
+        }
 
-            baseMaterial.color = Game.GridManager.GetUnownedColor();
+        private void SingleCellSelection()
+        {
+            if (CheckThisCellIsSelected())          // If Cell is selected
+            {  
+                DeselectCell();                     // Deselect cell
+            }
+            else if (!CheckThisCellIsSelected())    // If Cell is NOT selected
+            {
+                SelectCell();                       // Select cell
+            }
+        }
+
+        private void MultiCellSelection()
+        {
+            if (towerInCell == null) return;
+            
+            if (CheckThisCellIsSelected())
+            {
+                if (!isMultiSelected) return;
+
+                RemoveFromSelectedTowersList();
+                DeselectCell();
+            }
+            else if (!CheckThisCellIsSelected())
+            {
+                if (isMultiSelected)
+                {
+                    SelectCell();
+                    RemoveFromSelectedTowersList();
+                    DeselectCell();
+                    return;
+                }
+                
+                if (Game.TowerManager.GetSelectedTowers().Count == 4) return;
+
+                SelectCell();
+                AddToSelectedTowersList();
+            }
+        }
+
+        private void RemoveFromSelectedTowersList()
+        {
             Game.TowerManager.RemoveFromSelectedTowers(Game.SelectedCell.GetTowerInCell());
         }
 
-        public void SetGridPosition(Vector2 gridPosition)
+        private void AddToSelectedTowersList()
         {
-            this.gridPosition = gridPosition;
+            Game.TowerManager.AddToSelectedTowers(Game.SelectedCell.GetTowerInCell());
+        }
+
+        private bool CheckThisCellIsSelected()
+        {
+            return Game.SelectedCell == this;
+        }
+
+        private void SelectCell()
+        {
+            if (Game.GameState != GameState.TowerTierMode && Game.SelectedCell != null)
+            {
+                Game.SelectedCell.DeselectCell();
+            }
+
+            if (Game.GameState == GameState.TowerTierMode)
+                isMultiSelected = true;
+            
+            Game.SelectedCell = this;
+            HighlightSelectedCell(isOwned);
+            Game.Events.OnCellSelected.Invoke();
+            Game.Events.OnInfoUpdated.Invoke();
+        }
+
+        private void ResetCellsOnModeSwitch()
+        {
+            if (Game.GameState == GameState.TowerTierMode)
+            {
+                foreach (var tower in Game.TowerManager.GetSelectedTowers())
+                {
+                    tower.GetOccupiedCell().isMultiSelected = false;
+                }
+                Game.TowerManager.GetSelectedTowers().Clear();
+            }
+            
+            UnhighlightSelectedCell(isOwned);
+            Game.SelectedCell = null;
+            Game.Events.OnInfoUpdated.Invoke();
+        }
+        
+        private void DeselectCell()
+        {
+            if (Game.GameState == GameState.TowerTierMode)
+                isMultiSelected = false;
+            
+            UnhighlightSelectedCell(isOwned);
+            Game.SelectedCell = null;
+            Game.Events.OnCellSelected.Invoke();
+            Game.Events.OnInfoUpdated.Invoke();
+        }
+
+        private void DeselectCell(CellComponent cellComponent) // Used for event subscription only
+        {
+            if (Game.GameState == GameState.TowerTierMode)
+                isMultiSelected = false;
+            
+            UnhighlightSelectedCell(isOwned);
+            Game.SelectedCell = null;
+            Game.Events.OnCellSelected.Invoke();
+            Game.Events.OnInfoUpdated.Invoke();
+        }
+
+        #region Getters and Setters
+
+        public void SetGridPosition(Vector2 gridPos)
+        {
+            gridPosition = gridPos;
         }
 
         public Vector2 GetGridPosition()
@@ -161,25 +183,63 @@ namespace Code.Components
             return towerInCell;
         }
 
-        private void SetCellToOwned(CellComponent cellToOwn)
+        public void SetCellCost(double cost)
         {
-            // Subtract cell cost from total money cost (should be a GameManager method call)
-            // Set cell isOwned bool to true
-            // Set cell material to isOwned material
+            cellCost = cost;
+        }
+        public double GetCellCost()
+        {
+            return cellCost;
+        }
+        
+        #endregion
 
+        #region Already Refactored
+        
+        private void BuyCell(CellComponent cellToOwn)
+        {
             if (cellToOwn == null || cellToOwn.isOwned) return;
             
-            Game.Cash -= cellToOwn.cellCost;
-            Game.HUDManager.SetCashLabelValue(cellToOwn);
-            cellToOwn.isOwned = true;
-            cellToOwn.baseMaterial.color = Game.GridManager.GetOwnedColor();
+            Game.GameManager.SubtractValueFromGameCash(cellToOwn.cellCost);
+            
+            OwnCell(cellToOwn);
+        }
+        
+        private void OwnCell(CellComponent cellToChange)
+        {
+            cellToChange.SetCellOwned(true);
+            cellToChange.SetCellMaterialColor(Game.GridManager.GetOwnedColor());
         }
 
-        private Color GetHighLightColor(Color colorToHighlight)
+        public void OwnThisCell()
+        {
+            SetCellOwned(true);
+            SetCellMaterialColor(Game.GridManager.GetOwnedColor());
+        }
+
+        private void HighlightSelectedCell(bool owned)
+        {
+            SetCellMaterialColor(owned ? HighlightColor(Game.GridManager.GetOwnedColor()) : HighlightColor(Game.GridManager.GetUnownedColor()));
+        }
+        
+        private void UnhighlightSelectedCell(bool owned)
+        {
+            SetCellMaterialColor(owned ? Game.GridManager.GetOwnedColor() : Game.GridManager.GetUnownedColor());
+        }
+
+        public void SetCellMaterialColor(Color cellColor)
+        {
+            meshRenderer.material.color = cellColor;
+        }
+
+        private Color HighlightColor(Color colorToHighlight)
         {
             return new Color(colorToHighlight.r + Game.GridManager.GetColorHighlightOffset().x, 
-                            colorToHighlight.g + Game.GridManager.GetColorHighlightOffset().y, 
-                            colorToHighlight.b + Game.GridManager.GetColorHighlightOffset().z);
+                colorToHighlight.g + Game.GridManager.GetColorHighlightOffset().y, 
+                colorToHighlight.b + Game.GridManager.GetColorHighlightOffset().z);
         }
+        
+        #endregion
+        
     }
 }

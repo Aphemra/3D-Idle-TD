@@ -29,12 +29,6 @@ namespace Code.Utilities
             CheckNeighborIsNull(neighbors, neighborW);
             CheckNeighborIsNull(neighbors, neighborNW);
 
-            // Debug.Log("Neighbors: ");
-            // foreach (var neighbor in neighbors)
-            // {
-            //     Debug.Log(neighbor.name + ", ");
-            // }
-            
             return neighbors;
         }
 

@@ -1,5 +1,7 @@
 using System;
 using Cinemachine;
+using Code.Components;
+using Sirenix.OdinInspector;
 using UnityEngine;
 
 namespace Code.Managers
@@ -10,42 +12,77 @@ namespace Code.Managers
         [SerializeField] private bool inBuyTowerMode;
         [SerializeField] private bool inBuyCellMode;
         [SerializeField] private bool inTowerTierUpgradeMode;
-        [SerializeField] private float scrollScale;
-        [SerializeField] private Vector2 minMaxFOVZoom;
-        
-        [SerializeField] private CinemachineVirtualCamera topDownCamera;
-        [SerializeField] private CinemachineVirtualCamera threeDimensionalCamera;
-        
+
+        [Title("Game.cs Debug Variable Values")]
+        public GameState gameState;
+        public double currentCash;
+        public CellComponent selectedCell;
+        [Space] [Title("Forced Values")]
+        public bool forceState;
+        public GameState debugState;
+
         private void Awake()
         {
-            Game.Cash = startingCash;
-            ChangeState(GameState.GridGeneration);
-            
             if (Game.GameManager == null)
                 Game.GameManager = this;
+            
+            InitializeGame();
+            ChangeState(GameState.GridGeneration);
         }
-
+        
         private void Start()
         {
-            Game.HUDManager.SetCashLabelValue(Game.SelectedCell);
+            Game.Events.OnInfoUpdated.Invoke();
         }
 
         private void Update()
         {
-            if (Input.mouseScrollDelta.y != 0)
-                topDownCamera.m_Lens.FieldOfView = Mathf.Clamp(topDownCamera.m_Lens.FieldOfView - (Input.mouseScrollDelta.y * scrollScale), minMaxFOVZoom.x, minMaxFOVZoom.y);
+            DebugGameVariables();
         }
 
-        public void SwitchCameras()
+        private void DebugGameVariables()
         {
-            if (topDownCamera.Priority > threeDimensionalCamera.Priority)
-                threeDimensionalCamera.Priority += 10;
-            else if (topDownCamera.Priority < threeDimensionalCamera.Priority)
-                threeDimensionalCamera.Priority -= 10;
+            if (forceState)
+                ChangeState(debugState);
+            
+            gameState = Game.GameState;
+            currentCash = Game.Cash;
+            selectedCell = Game.SelectedCell;
         }
 
-        #region Getters and Setters
+        private void InitializeGame()
+        {
+            Game.Cash = startingCash;
+        }
+        
+        #region Getters and Setters And Helper Methods
 
+        public bool SetGameCash(double newCash)
+        {
+            if (newCash < 0) return false;
+            
+            Game.Cash = newCash;
+            Game.Events.OnCashValueUpdated.Invoke();
+
+            return true;
+        }
+
+        public void AddValueToGameCash(double valueToAdd)
+        {
+            Game.Cash += valueToAdd;
+            Game.Events.OnCashValueUpdated.Invoke();
+        }
+
+        public bool SubtractValueFromGameCash(double valueToSubtract)
+        {
+            if ((Game.Cash - valueToSubtract) < 0) return false;
+
+            Game.Cash -= valueToSubtract;
+            Game.Events.OnCashValueUpdated.Invoke();
+
+            return true;
+        }
+        
         public bool GetBuyTowerMode()
         {
             return inBuyTowerMode;
