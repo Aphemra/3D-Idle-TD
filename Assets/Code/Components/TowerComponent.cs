@@ -1,12 +1,7 @@
-using System;
-using System.Collections.Generic;
-using System.Diagnostics.Contracts;
 using Code.Resources;
 using Code.Utilities;
 using Sirenix.OdinInspector;
-using UnityEditor;
 using UnityEngine;
-using UnityEngine.Analytics;
 using Random = UnityEngine.Random;
 
 namespace Code.Components
@@ -24,29 +19,29 @@ namespace Code.Components
 
         [SerializeField] private CellComponent occupiedCell;
         [SerializeField] private Vector2 gridLocation;
-        [SerializeField] private GameObject currentTarget;
+        
+        [SerializeField] private Transform lazerOriginPoint;
 
-        private float shotCounter = 0;
-
-        [SerializeField] private Neighbors neighbors;
-
-        [SerializeField] private TowerComponent potentialNeighbor;
+        private Neighbors neighbors;
 
         private void OnEnable()
         {
-            Game.Events.OnEnemyEnteringBattlefield += GetTarget;
-
-            Game.Events.OnTowerPlaced += SetNeighbors;
+            Game.Events.OnTowerPlaced += PopulateNeighbors;
         }
 
         private void OnDisable()
         {
-            Game.Events.OnEnemyEnteringBattlefield -= GetTarget;
-            
-            Game.Events.OnTowerPlaced -= SetNeighbors;
+            Game.Events.OnTowerPlaced -= PopulateNeighbors;
         }
 
-        private void SetNeighbors(TowerComponent newTower)
+        private void Start()
+        {
+            InitializeNeighbors();
+            
+            SetTowerCost(Random.Range(25, 100)); // Debug
+        }
+
+        private void PopulateNeighbors(TowerComponent newTower)
         {
             newTower.InitializeNeighbors();
 
@@ -95,14 +90,7 @@ namespace Code.Components
                 }
             }
         }
-
-        private void Start()
-        {
-            InitializeNeighbors();
-            
-            SetTowerCost(Random.Range(25, 100)); // Debug
-        }
-
+        
         private void InitializeNeighbors()
         {
             if (neighbors != null) return;
@@ -117,6 +105,8 @@ namespace Code.Components
             
             occupiedCell.SetTowerInCell(this);
             
+            // Eventually multiply these values by location and wave difficulty multiplier
+            
             groupTowerTier = towerResource.groupTowerTier;
             cost = towerResource.baseCost;
             health = towerResource.maxHealth;
@@ -126,49 +116,18 @@ namespace Code.Components
             armorPenetration = towerResource.baseArmorPenetration;
         }
 
-        private void Update()
+        public double GetDamagePerSecondCalculation(double enemyArmor)
         {
-            Attack();
+            return damage;
         }
+        
+        #region Getters and Setters
 
-        private void GetTarget(GameObject target)
+        public Transform GetLazerOrigin()
         {
-            if (currentTarget == null)
-                currentTarget = target;
-            
-            if (Vector3.Distance(transform.position, currentTarget.transform.position) >
-                Vector3.Distance(transform.position, target.transform.position))
-            {
-                currentTarget = target;
-            }
+            return lazerOriginPoint;
         }
-
-        private void Attack()
-        {
-            if (currentTarget == null) return;
-            
-            if (shotCounter < shotSpeed)
-            {
-                //print("Not Shooting");
-                shotCounter += Time.deltaTime;
-                return;
-            }
-
-            if (shotCounter >= shotSpeed)
-            {
-                print("Shooting");
-                shotCounter = 0;
-                ShootEnemy();
-            }
-        }
-
-        private void ShootEnemy()
-        {
-            print(name + " is shooting enemy named " + currentTarget.name);
-            // Draw Raycast
-            // Call Damage method on enemy script when raycast hits
-        }
-
+        
         public void SetTowerGridPosition(Vector2 gridPosition)
         {
             gridLocation = gridPosition;
@@ -182,19 +141,6 @@ namespace Code.Components
         public CellComponent GetOccupiedCell()
         {
             return occupiedCell;
-        }
-
-        public bool IsNeighborsWith(List<TowerComponent> towersToCheck)
-        {
-            foreach (var neighbor in neighbors.GetNeighborsInAllDirections())
-            {
-                foreach (var tower in towersToCheck)
-                {
-                    print("Comparing " + tower.name + " and " + neighbor.name);
-                    if (tower != neighbor) return false;
-                }
-            }
-            return true;
         }
 
         public Neighbors GetNeighbors()
@@ -211,5 +157,7 @@ namespace Code.Components
         {
             cost = towerCost;
         }
+        
+        #endregion
     }
 }

@@ -7,10 +7,12 @@ namespace Code.Components
     {
         private void OnTriggerEnter(Collider other)
         {
-            print("On Trigger Enter: " + other.name);
-            
-            if (other.CompareTag("Enemy"))
-                Game.Events.OnEnemyEnteringBattlefield.Invoke(other.gameObject);
+            print("On Trigger Enter: " + other.transform.parent.name);
+
+            if (other.transform.parent.TryGetComponent(out EnemyComponent enemyComponent))
+            {
+                Game.Events.OnEnemyEnteringBattlefield.Invoke(enemyComponent);
+            }
         }
     }
 }

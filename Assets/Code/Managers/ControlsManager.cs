@@ -1,6 +1,4 @@
-﻿using System;
-using Cinemachine;
-using UnityEditor;
+﻿using Cinemachine;
 using UnityEngine;
 
 namespace Code.Managers
@@ -9,7 +7,9 @@ namespace Code.Managers
     {
         [SerializeField] private float scrollScale;
         [SerializeField] private Vector2 minMaxFOVZoom;
+        [SerializeField] private GameObject explosionPrefab;
         [Space]
+        [SerializeField] private Camera mainCamera;
         [SerializeField] private CinemachineVirtualCamera topDownCamera;
         [SerializeField] private CinemachineVirtualCamera threeDimensionalCamera;
 
@@ -24,6 +24,20 @@ namespace Code.Managers
 
         private void Update()
         {
+            if (Input.GetMouseButtonDown(0))
+            {
+                RaycastHit hit;
+                Ray ray = mainCamera.ScreenPointToRay(Input.mousePosition);
+
+                if (Physics.Raycast(ray, out hit))
+                {
+                    if (hit.collider.CompareTag("Explosion Plane"))
+                    {
+                        Instantiate(explosionPrefab, new Vector3(hit.point.x, hit.point.y, 0f), Quaternion.identity);
+                    }
+                }
+            }
+            
             if (canZoom)
                 ScrollZoom();
 

@@ -38,7 +38,6 @@ namespace Code
         public UnityAction OnInfoUpdated;       // Event fires when any piece of information is updated
         public UnityAction OnCashValueUpdated;  // Event fires when cash value is updated
         
-        // TODO: Work on switching over to a game state system and pure event driven game loop
         
         public UnityAction OnCellSelected;
 
@@ -48,7 +47,7 @@ namespace Code
 
         public UnityAction<TowerComponent> OnTowerPlaced;
 
-        public UnityAction<GameObject> OnEnemyEnteringBattlefield; // Probably switch to EnemyComponent and Transform, maybe
+        public UnityAction<EnemyComponent> OnEnemyEnteringBattlefield; // Probably switch to EnemyComponent and Transform, maybe
     }
 
     public static class Game
@@ -56,6 +55,8 @@ namespace Code
         public static GameState GameState;
         public static CellComponent SelectedCell;
         public static double Cash;
+        public static int Wave;
+        public static int Location;
         
         // Manager Instances
         public static GridManager GridManager { get; set; }
@@ -63,6 +64,7 @@ namespace Code
         public static GameManager GameManager { get; set; }
         public static TowerManager TowerManager { get; set; }
         public static ControlsManager ControlsManager { get; set; }
+        public static EnemyManager EnemyManager { get; set; }
 
         public static readonly GameEvents Events = new GameEvents();
     }

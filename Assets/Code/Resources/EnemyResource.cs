@@ -19,6 +19,6 @@ namespace Code.Resources
     public enum EnemyType
     {
         Melee, // Attacks by running into towers
-        Range  // Attacks by stopping short of towers and shooting from a distance (Raycast lasers)
+        Range  // Attacks by stopping short of towers and shooting from a distance
     }
 }
