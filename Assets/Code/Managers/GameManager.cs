@@ -20,7 +20,9 @@ namespace Code.Managers
         [Space] [Title("Forced Values")]
         public bool forceState;
         public GameState debugState;
-
+        [Space] [Title("Toggle Values")]
+        public bool canExplode;
+        
         private void Awake()
         {
             if (Game.GameManager == null)

@@ -1,8 +1,10 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Cinemachine;
 using Code.Components;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 namespace Code.Managers
 {
@@ -24,6 +26,7 @@ namespace Code.Managers
         
         [SerializeField] private GameObject shotRangeArea;
         [SerializeField] private GameObject floorPlane;
+        [SerializeField] private List<EnemySpawnerComponent> enemySpawners;
 
         private void Awake()
         {
@@ -45,6 +48,7 @@ namespace Code.Managers
             GenerateGrid();
             GenerateShotArea();
             GenerateBattleField();
+            GenerateEnemySpawners();
             Game.GameManager.ChangeState(GameState.TowerBuyingMode);
         }
 
@@ -76,7 +80,7 @@ namespace Code.Managers
         private void GenerateShotArea()
         {
             shotRangeArea.transform.position = new Vector3(gridSize.x / 2, gridSize.y / 2, -1);
-            shotRangeArea.transform.localScale = new Vector3(gridSize.x * 1.5f, gridSize.y * 1.5f, shotRangeArea.transform.localScale.z);
+            shotRangeArea.transform.localScale = new Vector3(gridSize.x * 1.8f, gridSize.y * 1.8f, shotRangeArea.transform.localScale.z);
         }
 
         private void GenerateBattleField()
@@ -84,6 +88,36 @@ namespace Code.Managers
             floorPlane.transform.localScale = new Vector3(gridSize.x * 2f, 1f, gridSize.y * 2f);
         }
 
+        private void GenerateEnemySpawners()
+        {
+            foreach (var spawner in enemySpawners)
+            {
+                spawner.gameObject.SetActive(true);
+                var trans = spawner.transform;
+
+                switch (spawner.GetLocation())
+                {
+                    case SpawnerLocation.North:
+                        trans.position = new Vector3(gridSize.x / 2, gridSize.y * 2.5f, -1.5f);
+                        trans.localScale = new Vector3(gridSize.x * 4 + 1, trans.localScale.y, 3);
+                        break;
+                    case SpawnerLocation.South:
+                        trans.position = new Vector3(gridSize.x / 2, (gridSize.y * -2.5f) + gridSize.y, -1.5f);
+                        trans.localScale = new Vector3(gridSize.x * 4 + 1, trans.localScale.y, 3);
+                        break;
+                    case SpawnerLocation.East:
+                        trans.position = new Vector3(gridSize.x * 2.5f, gridSize.y / 2, -1.5f);
+                        trans.localScale = new Vector3(trans.localScale.x, gridSize.y * 4 + 1, 3);
+                        break;
+                    case SpawnerLocation.West:
+                        trans.position = new Vector3((gridSize.x * -2.5f) + gridSize.x, gridSize.y / 2, -1.5f);
+                        trans.localScale = new Vector3(trans.localScale.x, gridSize.y * 4 + 1, 3);
+                        break;
+                }
+                spawner.GenerateSpawnPoints();
+            }
+        }
+        
         #region Getters and Setters
         
         public Color GetOwnedColor()
@@ -104,6 +138,11 @@ namespace Code.Managers
         public Vector2 GetGridSize()
         {
             return gridSize;
+        }
+
+        public List<CellComponent> GetGridCellsList()
+        {
+            return gridCells;
         }
         
         #endregion

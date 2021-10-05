@@ -160,6 +160,7 @@ MonoBehaviour:
   armorPenetration: 0
   occupiedCell: {fileID: 0}
   gridLocation: {x: 0, y: 0}
+  isDestroyed: 0
   lazerOriginPoint: {fileID: 6986476103070148829}
 --- !u!114 &4785962503132829020
 MonoBehaviour:
@@ -227,7 +228,7 @@ LineRenderer:
       m_Curve:
       - serializedVersion: 3
         time: 0
-        value: 0.109375
+        value: 0.1015625
         inSlope: 0
         outSlope: 0
         tangentMode: 0
@@ -239,8 +240,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 0.5764706, g: 0, b: 0, a: 1}
-      key1: {r: 0.5754717, g: 0, b: 0, a: 1}
+      key0: {r: 0, g: 0.6431373, b: 0.019607844, a: 1}
+      key1: {r: 0, g: 0.6415094, b: 0.018191453, a: 1}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -263,7 +264,7 @@ LineRenderer:
       atime5: 0
       atime6: 0
       atime7: 0
-      m_Mode: 0
+      m_Mode: 1
       m_NumColorKeys: 2
       m_NumAlphaKeys: 2
     numCornerVertices: 0

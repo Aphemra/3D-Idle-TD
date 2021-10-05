@@ -19,6 +19,8 @@ namespace Code.Components
 
         [SerializeField] private CellComponent occupiedCell;
         [SerializeField] private Vector2 gridLocation;
+
+        [SerializeField] private bool isDestroyed;
         
         [SerializeField] private Transform lazerOriginPoint;
 
@@ -37,7 +39,7 @@ namespace Code.Components
         private void Start()
         {
             InitializeNeighbors();
-            
+            isDestroyed = false;
             SetTowerCost(Random.Range(25, 100)); // Debug
         }
 
@@ -116,9 +118,38 @@ namespace Code.Components
             armorPenetration = towerResource.baseArmorPenetration;
         }
 
+        public void InflictDamage(double damageToInflict)
+        {
+            health = (health - damageToInflict) <= 0 ? 0 : health - damageToInflict;
+            
+            if (health <= 0) DestroyTower();
+        }
+        
+        private void DestroyTower()
+        {
+            gameObject.SetActive(false);
+            Game.TowerManager.GetActiveTowers().Remove(this);
+            isDestroyed = true;
+        }
+
         public double GetDamagePerSecondCalculation(double enemyArmor)
         {
             return damage;
+        }
+
+        public double GetArmor()
+        {
+            return armor;
+        }
+
+        public double GetHealth()
+        {
+            return health;
+        }
+
+        public bool GetDestructionStatus()
+        {
+            return isDestroyed;
         }
         
         #region Getters and Setters

@@ -65,6 +65,7 @@ namespace Code
         public static TowerManager TowerManager { get; set; }
         public static ControlsManager ControlsManager { get; set; }
         public static EnemyManager EnemyManager { get; set; }
+        public static SpawnManager SpawnManager { get; set; }
 
         public static readonly GameEvents Events = new GameEvents();
     }

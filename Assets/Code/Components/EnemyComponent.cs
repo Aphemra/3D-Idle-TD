@@ -78,7 +78,17 @@ namespace Code.Components
             return armor;
         }
 
-        public Transform GetLazerTargetOrigin()
+        public double GetMovementSpeed()
+        {
+            return movementSpeed;
+        }
+
+        public EnemyType GetEnemyType()
+        {
+            return enemyType;
+        }
+
+        public Transform GetLazerOrigin()
         {
             return lazerTargetOrigin;
         }
@@ -94,6 +104,16 @@ namespace Code.Components
         {
             Game.EnemyManager.RemoveSpawnedEnemy(this);
             Destroy(gameObject);
+        }
+        
+        public double GetDamagePerSecondCalculation(double enemyArmor)
+        {
+            return damage;
+        }
+
+        public void SetEnemyType(EnemyType enemyTypeToSet)
+        {
+            enemyType = enemyTypeToSet;
         }
     }
 }

@@ -6,15 +6,8 @@ namespace Code.Components
     public class TowerAIComponent : MonoBehaviour
     {
         [SerializeField] private TowerComponent thisTowerComponent;
-        
         [SerializeField] private EnemyComponent currentTarget;
-
         [SerializeField] private LineRenderer lineRenderer;
-
-        // 1. Nearest Enemy First Targeting
-        //      a. Has enemy entered battlefield before?
-        //      b. Is enemy closest enemy among all enemies in battlefield?
-        //      c. Set enemy to current target until dead or no longer closest among all enemies
 
         private void Update()
         {
@@ -25,23 +18,30 @@ namespace Code.Components
         {
             if (currentTarget == null)
             {
-                lineRenderer.SetPosition(0, thisTowerComponent.GetLazerOrigin().position);
-                lineRenderer.SetPosition(1, thisTowerComponent.GetLazerOrigin().position);
+                ClearLines();
                 return;
             }
             
             lineRenderer.SetPosition(0, thisTowerComponent.GetLazerOrigin().position);
-            lineRenderer.SetPosition(1, currentTarget.GetLazerTargetOrigin().position);
+            lineRenderer.SetPosition(1, currentTarget.GetLazerOrigin().position);
+        }
+
+        private void ClearLines()
+        {
+            lineRenderer.SetPosition(0, thisTowerComponent.GetLazerOrigin().position);
+            lineRenderer.SetPosition(1, thisTowerComponent.GetLazerOrigin().position);
         }
         
         private void NearestEnemyFirstTargeting()
         {
             currentTarget = GetNearestEnemy();
 
-            DrawLineToCurrentTarget();
+            if (currentTarget == null)
+            {
+                ClearLines();
+                return;
+            }
             
-            if (currentTarget == null) return;
-
             AttackCurrentTarget();
         }
 
@@ -63,7 +63,6 @@ namespace Code.Components
             
             if (currentTarget == null) return true;
 
-            
             if (Vector3.Distance(thisPosition, currentTarget.gameObject.transform.position) >
                 Vector3.Distance(thisPosition, enemy.gameObject.transform.position))
             {
@@ -75,6 +74,7 @@ namespace Code.Components
 
         private void AttackCurrentTarget()
         {
+            DrawLineToCurrentTarget();
             currentTarget.InflictDamage(thisTowerComponent.GetDamagePerSecondCalculation(currentTarget.GetArmor()));
         }
     }
