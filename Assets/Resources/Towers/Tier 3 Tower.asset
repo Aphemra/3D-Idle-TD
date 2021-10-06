@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7c45ae444fa91f84398b8da5f7559f45, type: 3}
-  m_Name: Tier 0 Tower
+  m_Name: Tier 3 Tower
   m_EditorClassIdentifier: 
   serializationData:
     SerializedFormat: 2
@@ -21,11 +21,11 @@ MonoBehaviour:
     PrefabModificationsReferencedUnityObjects: []
     PrefabModifications: []
     SerializationNodes: []
-  prefab: {fileID: 2060322284671778511, guid: bab41c04eae7f31468da685f22872dfa, type: 3}
-  groupTowerTier: 0
+  prefab: {fileID: 2060322284671778511, guid: decd424d591bb5f4f8bdb8d56eaa23f2, type: 3}
+  towerSize: 3
   baseCost: 5
   maxHealth: 1000
-  baseDamage: 5
+  baseDamage: 150
   baseArmor: 7
   shotSpeed: 0.5
   baseArmorPenetration: 1

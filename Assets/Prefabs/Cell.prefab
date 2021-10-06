@@ -72,10 +72,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   isOwned: 0
+  isMultiSelected: 0
   cellCost: 5
   gridPosition: {x: 0, y: 0}
   towerInCell: {fileID: 0}
   meshRenderer: {fileID: 763514376508037209}
+  childVisual: {fileID: 763514376508037211}
 --- !u!1 &763514376508037212
 GameObject:
   m_ObjectHideFlags: 0

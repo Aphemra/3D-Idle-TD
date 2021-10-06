@@ -11,9 +11,9 @@ namespace Code.Managers
     public class TowerManager : CoreManager
     {
         [SerializeField] private List<TowerResource> towerResources;
-        [SerializeField] private int defaultGroupTowerTier = 0;
         [SerializeField] private Transform towerParentTransform;
-        [SerializeField] private List<TowerComponent> spawnedTowers;
+        [SerializeField] private List<TowerComponent> activeTowers;
+        [SerializeField] private List<TowerComponent> inactiveTowers;
 
         [SerializeField] private List<TowerComponent> selectedTowers;
 
@@ -51,24 +51,24 @@ namespace Code.Managers
             Game.Events.OnTowerPlaced.Invoke(tower);
         }
 
-        private void PlaceTower(CellComponent cellToPlaceTower)
+        private void PlaceTower(CellComponent cellToPlaceTower, int towerSizeIndex)
         {
             if (cellToPlaceTower.GetTowerInCell() != null) return;
             
-            var towerResource = towerResources[defaultGroupTowerTier];
+            var towerResource = towerResources[towerSizeIndex - 1];
             var tower = Instantiate(towerResource.prefab, new Vector3(cellToPlaceTower.GetGridPosition().x, cellToPlaceTower.GetGridPosition().y), Quaternion.identity, towerParentTransform).GetComponent<TowerComponent>();
-            tower.gameObject.name = "Tower at (" + cellToPlaceTower.GetGridPosition().x + "," + cellToPlaceTower.GetGridPosition().y + ")";
-            spawnedTowers.Add(tower);
+            activeTowers.Add(tower);
             
             tower.SetTowerGridPosition(cellToPlaceTower.GetGridPosition());
 
             InitializeTower(tower, towerResource);
+            tower.gameObject.name = "Tower of size " + tower.GetTowerSize() + " at (" + cellToPlaceTower.GetGridPosition().x / tower.GetTowerSize() + "," + cellToPlaceTower.GetGridPosition().y / tower.GetTowerSize() + ")";
 
             Game.GameManager.SubtractValueFromGameCash(tower.GetOccupiedCell().GetCellCost()); // Debug
             Game.Events.OnInfoUpdated.Invoke(); // Maybe Debug
         }
         
-        public void CanTowersTierUp()
+        public void CanTowersBeCombined()
         {
             var truthCount = 0;
             
@@ -81,17 +81,50 @@ namespace Code.Managers
 
             if (truthCount == 4)
             {
-                print("TOWERS CAN TIER UP!");
-                Game.HUDManager.SetNotificationLabel("Selected towers can tier up!");
+                CombineTowers();
+                Game.HUDManager.SetNotificationLabel("Towers Combined!");
             }
 
             if (truthCount < 4)
             {
-                print("TOWERS AREN'T NEIGHBORS!");
                 Game.HUDManager.SetNotificationLabel("Selected towers need to be in a 2x2 grid!");
             }
         }
-        
+
+        private void CombineTowers()
+        {
+            Vector2 spawnGridLocation = GetCombinedTowerSpawnGridLocation();
+
+            foreach (var tower in selectedTowers)
+            {
+                Game.GridManager.DestroyCell(tower.GetOccupiedCell());
+                DestroyTower(tower);
+            }
+
+            int newCellAndTowerSize = selectedTowers[0].GetTowerSize() + 1;
+            var cell = Game.GridManager.SpawnCell(newCellAndTowerSize, spawnGridLocation);
+
+            Game.SelectedCell = cell;
+            PlaceTower(cell, newCellAndTowerSize);
+            Game.SelectedCell = null;
+            
+            selectedTowers.Clear();
+        }
+
+        private Vector2 GetCombinedTowerSpawnGridLocation()
+        {
+            Vector2 newGridLocation = new Vector2(10000,10000);
+
+            foreach (var tower in selectedTowers)
+            {
+                if (tower.GetTowerGridPosition().x < newGridLocation.x ||
+                    tower.GetTowerGridPosition().y < newGridLocation.y)
+                    newGridLocation = tower.GetTowerGridPosition();
+            }
+
+            return newGridLocation;
+        }
+
         private bool CheckTowerNeighbors(TowerComponent towerToCheck)
         {
             var isTrue = false;
@@ -121,7 +154,36 @@ namespace Code.Managers
 
         public List<TowerComponent> GetActiveTowers()
         {
-            return spawnedTowers;
+            return activeTowers;
+        }
+        
+        public List<TowerComponent> GetInactiveTowers()
+        {
+            return inactiveTowers;
+        }
+        
+        public void DestroyTower(TowerComponent tower)
+        {
+            activeTowers.Remove(tower);
+            Destroy(tower.gameObject);
+        }
+
+        public void MoveTowerFromActiveToInactive(TowerComponent towerToMove)
+        {
+            activeTowers.Remove(towerToMove);
+            inactiveTowers.Add(towerToMove);
+        }
+        
+        public void MoveTowerFromInactiveToActive(TowerComponent towerToMove)
+        {
+            inactiveTowers.Remove(towerToMove);
+            activeTowers.Add(towerToMove);
+        }
+
+        public void MoveAllInactiveTowersToActive()
+        {
+            activeTowers.AddRange(inactiveTowers);
+            inactiveTowers.Clear();
         }
 
         public List<TowerComponent> GetSelectedTowers()

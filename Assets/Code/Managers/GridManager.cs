@@ -77,6 +77,22 @@ namespace Code.Managers
             }
         }
 
+        public CellComponent SpawnCell(int sizeOfCell, Vector2 spawnPositionOnGrid)
+        {
+            float calculatedCellScale = Mathf.Pow(2, (sizeOfCell - 1)); // Will find scale value of cell
+            float calculatedCellPosition = calculatedCellScale / 2;
+            
+            var cell = Instantiate(cellPrefab, spawnPositionOnGrid, Quaternion.identity, gridParentContainer).GetComponent<CellComponent>();
+            cell.SetGridPosition(spawnPositionOnGrid);
+            cell.name = "Cell of Size " + sizeOfCell + " (" + spawnPositionOnGrid.x / sizeOfCell + "," + spawnPositionOnGrid.y / sizeOfCell + ")";
+            cell.ReadjustCell(calculatedCellScale, calculatedCellPosition);
+            cell.SetCellOwned(true);
+            cell.SetSpawnColor();
+            gridCells.Add(cell);
+
+            return cell;
+        }
+
         private void GenerateShotArea()
         {
             shotRangeArea.transform.position = new Vector3(gridSize.x / 2, gridSize.y / 2, -1);
@@ -143,6 +159,12 @@ namespace Code.Managers
         public List<CellComponent> GetGridCellsList()
         {
             return gridCells;
+        }
+
+        public void DestroyCell(CellComponent cell)
+        {
+            gridCells.Remove(cell);
+            Destroy(cell.gameObject);
         }
         
         #endregion

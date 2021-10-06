@@ -7,7 +7,7 @@ namespace Code.Resources
     public class TowerResource : SerializedScriptableObject
     {
         public GameObject prefab;
-        public int groupTowerTier;
+        public int towerSize;
         public double baseCost;
         public double maxHealth;
         public double baseDamage;

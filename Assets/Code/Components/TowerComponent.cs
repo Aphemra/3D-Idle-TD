@@ -9,7 +9,7 @@ namespace Code.Components
     public class TowerComponent : CoreComponent
     {
         [Title("Tower Statistics")]
-        [SerializeField] private int groupTowerTier;
+        [SerializeField] private int towerSize;
         [SerializeField] private double cost;
         [SerializeField] private double health;
         [SerializeField] private double damage;
@@ -24,6 +24,8 @@ namespace Code.Components
         
         [SerializeField] private Transform lazerOriginPoint;
 
+        private double maxHealth;
+
         private Neighbors neighbors;
 
         private void OnEnable()
@@ -34,6 +36,12 @@ namespace Code.Components
         private void OnDisable()
         {
             Game.Events.OnTowerPlaced -= PopulateNeighbors;
+        }
+
+        [Button]
+        private void PrintNeighbors()
+        {
+            print(neighbors.ToString());
         }
 
         private void Start()
@@ -51,8 +59,11 @@ namespace Code.Components
             {
                 for (var i = 0; i < Game.TowerManager.GetDirections().Count; i++)
                 {
-                    if (new Vector2(activeTower.GetTowerGridPosition().x + Game.TowerManager.GetDirections()[i].x, activeTower.GetTowerGridPosition().y + Game.TowerManager.GetDirections()[i].y) == newTower.gridLocation)
+                    print("(" + (activeTower.GetTowerGridPosition().x + Game.TowerManager.GetDirections()[i].x * newTower.towerSize) + "," + (activeTower.GetTowerGridPosition().y + Game.TowerManager.GetDirections()[i].y * newTower.towerSize) + ") || (" + newTower.gridLocation.x + "," + newTower.gridLocation.y + ")");
+                    if (new Vector2(activeTower.GetTowerGridPosition().x + Game.TowerManager.GetDirections()[i].x * newTower.towerSize, activeTower.GetTowerGridPosition().y + Game.TowerManager.GetDirections()[i].y * newTower.towerSize) == newTower.gridLocation)
                     {
+                        if (activeTower.towerSize != newTower.towerSize) continue;
+                        
                         switch (i)
                         {
                             case 0:
@@ -92,6 +103,11 @@ namespace Code.Components
                 }
             }
         }
+
+        public int GetTowerSize()
+        {
+            return towerSize;
+        }
         
         private void InitializeNeighbors()
         {
@@ -109,13 +125,15 @@ namespace Code.Components
             
             // Eventually multiply these values by location and wave difficulty multiplier
             
-            groupTowerTier = towerResource.groupTowerTier;
+            towerSize = towerResource.towerSize;
             cost = towerResource.baseCost;
             health = towerResource.maxHealth;
             damage = towerResource.baseDamage;
             armor = towerResource.baseArmor;
             shotSpeed = towerResource.shotSpeed;
             armorPenetration = towerResource.baseArmorPenetration;
+
+            maxHealth = health;
         }
 
         public void InflictDamage(double damageToInflict)
@@ -128,13 +146,24 @@ namespace Code.Components
         private void DestroyTower()
         {
             gameObject.SetActive(false);
-            Game.TowerManager.GetActiveTowers().Remove(this);
+            Game.TowerManager.MoveTowerFromActiveToInactive(this);
             isDestroyed = true;
+        }
+
+        public void ReviveTower()
+        {
+            gameObject.SetActive(true);
+            isDestroyed = false;
         }
 
         public double GetDamagePerSecondCalculation(double enemyArmor)
         {
             return damage;
+        }
+
+        public void HealToMaxHealth()
+        {
+            health = maxHealth;
         }
 
         public double GetArmor()

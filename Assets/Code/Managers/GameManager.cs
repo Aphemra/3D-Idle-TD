@@ -17,6 +17,8 @@ namespace Code.Managers
         public GameState gameState;
         public double currentCash;
         public CellComponent selectedCell;
+        public int location;
+        public int wave;
         [Space] [Title("Forced Values")]
         public bool forceState;
         public GameState debugState;
@@ -50,6 +52,8 @@ namespace Code.Managers
             gameState = Game.GameState;
             currentCash = Game.Cash;
             selectedCell = Game.SelectedCell;
+            location = Game.Location;
+            wave = Game.Wave;
         }
 
         private void InitializeGame()

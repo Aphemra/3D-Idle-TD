@@ -14,6 +14,7 @@ namespace Code.Components
         [SerializeField] private TowerComponent towerInCell;
 
         [SerializeField] private MeshRenderer meshRenderer;
+        [SerializeField] private Transform childVisual;
 
         private void OnEnable()
         {
@@ -32,6 +33,16 @@ namespace Code.Components
         public void SetSpawnColor()
         {
             meshRenderer.material.color = isOwned ? Game.GridManager.GetOwnedColor() : Game.GridManager.GetUnownedColor();
+        }
+
+        public void ReadjustCell(float scale, float position)
+        {
+            var collider = childVisual.parent.GetComponent<BoxCollider2D>();
+            
+            childVisual.localScale = new Vector3(scale, scale, 1);
+            childVisual.localPosition = new Vector3(position, position, 0);
+            collider.size = childVisual.localScale;
+            collider.offset = childVisual.localPosition;
         }
         
         private void OnMouseDown()

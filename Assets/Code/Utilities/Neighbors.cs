@@ -37,5 +37,22 @@ namespace Code.Utilities
             if (direction != null)
                 neighbors.Add(direction);
         }
+
+        public override string ToString()
+        {
+            return "North:     " + CheckNull(neighborN) +
+                   "\nNortheast: " + CheckNull(neighborNE) +
+                   "\nEast:      " + CheckNull(neighborE) +
+                   "\nSoutheast: " + CheckNull(neighborSE) +
+                   "\nSouth:     " + CheckNull(neighborS) +
+                   "\nSouthwest: " + CheckNull(neighborSW) +
+                   "\nWest:      " + CheckNull(neighborW) +
+                   "\nNorthwest: " + CheckNull(neighborNW);
+        }
+
+        private static string CheckNull(TowerComponent tower)
+        {
+            return tower == null ? "" : tower.name;
+        }
     }
 }

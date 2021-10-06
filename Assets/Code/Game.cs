@@ -43,7 +43,7 @@ namespace Code
 
         public UnityAction<CellComponent> OnCellPurchased;
 
-        public UnityAction<CellComponent> OnTowerPurchased;
+        public UnityAction<CellComponent, int> OnTowerPurchased;
 
         public UnityAction<TowerComponent> OnTowerPlaced;
 
@@ -66,6 +66,7 @@ namespace Code
         public static ControlsManager ControlsManager { get; set; }
         public static EnemyManager EnemyManager { get; set; }
         public static SpawnManager SpawnManager { get; set; }
+        public static WaveAndLocationManager WaveAndLocationManager { get; set; }
 
         public static readonly GameEvents Events = new GameEvents();
     }

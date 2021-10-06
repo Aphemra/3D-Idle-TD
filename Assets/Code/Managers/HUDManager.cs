@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.CompilerServices;
 using Code.Components;
 using Sirenix.OdinInspector;
 using TMPro;
@@ -14,6 +15,9 @@ namespace Code.Managers
         [SerializeField] private TextMeshProUGUI totalCashLabel;
         [SerializeField] private Button changeModeButton;
         [SerializeField] private TextMeshProUGUI notificationLabel;
+        [SerializeField] private TextMeshProUGUI waveLabel;
+        [SerializeField] private TextMeshProUGUI locationLabel;
+        [SerializeField] private Toggle autoToggle;
         [Space]
         
         [Title("Buy Cells Menu Variables")]
@@ -55,6 +59,7 @@ namespace Code.Managers
         {
             // Any HUD update methods get called here.
             SetCashLabelValue();
+            SetWaveAndLocationLabel();
 
             if (Game.SelectedCell == null) return;
 
@@ -67,6 +72,17 @@ namespace Code.Managers
                 SetTowerCostLabel(Game.SelectedCell.GetCellCost());
             else
                 SetTowerCostLabel(0);
+        }
+
+        private void SetWaveAndLocationLabel()
+        {
+            locationLabel.text = "Location: " + Game.Location;
+            waveLabel.text = "Wave: " + Game.Wave + "/10"; // Second number should also be a variable eventually
+        }
+
+        public void SetAutoToggle(bool state)
+        {
+            autoToggle.isOn = state;
         }
         
         #region Already Refactored
@@ -130,9 +146,9 @@ namespace Code.Managers
             Game.Events.OnCellPurchased.Invoke(Game.SelectedCell);
         }
 
-        public void PurchaseTower()
+        public void PurchaseTower(int towerSizeIndex)
         {
-            Game.Events.OnTowerPurchased.Invoke(Game.SelectedCell);
+            Game.Events.OnTowerPurchased.Invoke(Game.SelectedCell, towerSizeIndex);
         }
 
         public void SwitchModes(int newMode)

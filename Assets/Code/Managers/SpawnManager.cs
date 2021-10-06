@@ -26,6 +26,12 @@ namespace Code.Managers
         {
             StartCoroutine(SpawnEnemiesCoroutine());
         }
+        
+        public void SpawnEnemiesWithEnemyCount(int enemiesToSpawn)
+        {
+            totalEnemyCount = enemiesToSpawn;
+            StartCoroutine(SpawnEnemiesCoroutine());
+        }
 
         IEnumerator SpawnEnemiesCoroutine()
         {
